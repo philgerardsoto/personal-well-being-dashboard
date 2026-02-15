@@ -31,7 +31,7 @@ def fetch_emails(days_back=5, senders=None):
     # Construct query
     query_params = {
         'after': start_date.strftime('%Y/%m/%d'),
-        'before': end_date.strftime('%Y/%m/%d')
+        'before': (end_date + timedelta(days=1)).strftime('%Y/%m/%d')
     }
     
     if senders:
@@ -53,11 +53,17 @@ def fetch_emails(days_back=5, senders=None):
     email_data = []
     for message in messages:
         email_data.append({
+            'id': message.id,
+            'thread_id': message.thread_id,
             'date': message.date,
             'sender': message.sender,
+            'recipient': message.recipient,
             'subject': message.subject,
             'snippet': message.snippet,
-            'id': message.id
+            'body': message.plain,
+            'labels': message.label_ids,
+            'cc': message.cc,
+            'bcc': message.bcc
         })
     
     df = pd.DataFrame(email_data)
@@ -65,7 +71,7 @@ def fetch_emails(days_back=5, senders=None):
 
 if __name__ == "__main__":
     try:
-        df = fetch_emails(days_back=7)
+        df = fetch_emails()
         if not df.empty:
             print("\nTop 5 recent emails:")
             print(df.head())
