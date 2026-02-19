@@ -4,33 +4,39 @@ import pandas as pd
 from datetime import datetime, timedelta
 import os
 
-def fetch_emails(days_back=5, senders=None):
+def fetch_emails(days_back=5, start_date=None, senders=None, client_secret_file='client_secret.json', creds_file='gmail_token.json'):
     """
-    Fetches emails from the last `days_back` days.
+    Fetches emails.
     
     Args:
-        days_back (int): Number of days to look back.
+        days_back (int): Number of days to look back (default).
+        start_date (datetime): Specific start date (overrides days_back).
         senders (list): Optional list of sender email addresses to filter by.
+        client_secret_file (str): Path to client secret file.
+        creds_file (str): Path to gmail token file.
         
     Returns:
         pd.DataFrame: DataFrame containing email details.
     """
     
     # Initialize Gmail client
-    # It will look for client_secret.json in the current directory
-    if not os.path.exists('client_secret.json'):
-        raise FileNotFoundError("client_secret.json not found in the current directory.")
+    if not os.path.exists(client_secret_file):
+         raise FileNotFoundError(f"{client_secret_file} not found.")
 
     print("Authenticating with Gmail...")
-    gmail = Gmail() 
+    gmail = Gmail(client_secret_file=client_secret_file, creds_file=creds_file) 
 
     # Calculate date range
     end_date = datetime.now()
-    start_date = end_date - timedelta(days=days_back)
+    if start_date:
+        query_start_date = start_date
+    else:
+        query_start_date = end_date - timedelta(days=days_back)
     
     # Construct query
+    # "before" is exclusive, so we add 1 day to include emails from the end_date itself
     query_params = {
-        'after': start_date.strftime('%Y/%m/%d'),
+        'after': query_start_date.strftime('%Y/%m/%d'),
         'before': (end_date + timedelta(days=1)).strftime('%Y/%m/%d')
     }
     
@@ -44,7 +50,7 @@ def fetch_emails(days_back=5, senders=None):
         # Let's stick to time-based for now as per plan, user can refine later.
         pass
 
-    print(f"Fetching emails from {start_date.date()} to {end_date.date()}...")
+    print(f"Fetching emails from {query_start_date.date()} to {end_date.date()}...")
     
     messages = gmail.get_messages(query=construct_query(query_params))
     

@@ -1,0 +1,5 @@
+simplegmail
+pandas
+google-cloud-bigquery
+google-cloud-secret-manager
+pandas-gbq
