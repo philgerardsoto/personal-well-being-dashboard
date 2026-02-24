@@ -71,7 +71,7 @@ This project is designed to run as a **Cloud Run Job**, using **Secret Manager**
     gcloud run jobs deploy pwbd-loader \
       --source . \
       --service-account pwbd-runner@[YOUR_PROJECT_ID].iam.gserviceaccount.com \
-      --region us-central1
+      --region asia-southeast1
     ```
 
 ## Contributing

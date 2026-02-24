@@ -12,7 +12,7 @@ echo "Setting up Workload Identity Federation for Project: $PROJECT_ID"
 # 1. Create Artifact Registry Repository
 gcloud artifacts repositories create pwbd-repo \
     --repository-format=docker \
-    --location=us-central1 \
+    --location=asia-southeast1 \
     --description="Docker repository for PWBD"
 
 # 2. Create Workload Identity Pool
