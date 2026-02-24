@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Run bq_loader.py when the container launches
-CMD ["python", "bq_loader.py"]
+CMD ["python", "gmail_pipeline.py"]

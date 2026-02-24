@@ -25,9 +25,19 @@ While the ultimate aim is a dashboard, the majority of the project will be focus
 3.  **Local Credentials (Required for BQ & Secret Manager)**:
     - Place your `client_secret.json` in the root directory.
     - Run `python gmail_fetcher.py` once locally to generate `gmail_token.json`.    
-    If you want to run `bq_loader.py` locally, authenticate with your Google account:
+    If you want to run `gmail_pipeline.py` locally to extract and load data using `dlt`:
+    1. Authenticate with your Google account:
     ```bash
     gcloud auth application-default login
+    ```
+    2. Run the pipeline with your Google Cloud Project ID:
+    ```bash
+    # Windows CMD
+    set PROJECT_ID=[YOUR_PROJECT_ID]&& python gmail_pipeline.py
+    
+    # Linux/Mac
+    export PROJECT_ID=[YOUR_PROJECT_ID]
+    python gmail_pipeline.py
     ```
     This allows the script to access Secret Manager and BigQuery on your behalf.
 
