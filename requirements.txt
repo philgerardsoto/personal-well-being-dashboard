@@ -1,0 +1,6 @@
+simplegmail==4.1.1
+pandas==2.3.3
+google-cloud-bigquery==3.40.1
+google-cloud-secret-manager==2.26.0
+pandas-gbq==0.33.0
+dlt[bigquery,duckdb]==1.22.1

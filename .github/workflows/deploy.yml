@@ -1,0 +1,54 @@
+name: Deploy Email Loader
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: asia-southeast1
+  REPO_NAME: personal-well-being-dashboard
+  # TODO: You will get this value from the setup_wif.sh script
+  WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+  SERVICE_ACCOUNT: pwbd-runner@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+
+      - name: Build and Push Container
+        run: |
+          IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT_ID}/pwbd-repo/loader"
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      - name: Deploy Cloud Run Job
+        run: |
+          IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT_ID}/pwbd-repo/loader"
+          gcloud run jobs deploy pwbd-loader \
+            --image $IMAGE_NAME \
+            --region $REGION \
+            --service-account $SERVICE_ACCOUNT \
+            --set-env-vars PROJECT_ID=$PROJECT_ID

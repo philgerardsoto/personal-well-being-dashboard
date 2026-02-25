@@ -121,3 +121,5 @@ test.py
 recent_emails.csv
 
 .DS_Store
+
+*.duckdb
