@@ -3,8 +3,10 @@ import logging
 import dlt
 import dlt.destinations
 from dlt.common.typing import TDataItem
-import gmail_fetcher
-from datetime import datetime
+from simplegmail import Gmail
+from simplegmail.query import construct_query
+import pandas as pd
+from datetime import datetime, timedelta
 from google.cloud import secretmanager
 
 # Setup logging
@@ -96,14 +98,51 @@ def fetch_gmail_resource(
     # Fetch secrets or use local files
     client_secret_path, token_path = setup_credentials_files()
 
-    # Fetch Data using original fetch_emails, but passing our start_date
-    df = gmail_fetcher.fetch_emails(
-        start_date=query_start_date,
-        client_secret_file=client_secret_path,
-        creds_file=token_path
-    )
+    # Initialize Gmail client
+    try:
+        if not os.path.exists(client_secret_path):
+            raise FileNotFoundError(f"{client_secret_path} not found.")
+        gmail = Gmail(client_secret_file=client_secret_path, creds_file=token_path)
+    except Exception as e:
+        logger.error(f"Failed to authenticate with Gmail: {e}")
+        raise
+
+    # Calculate date range
+    end_date = datetime.now()
+    if not query_start_date:
+        query_start_date = end_date - timedelta(days=5) # Default 5 days back
     
-    if df is None or df.empty:
+    # Construct query
+    query_params = {
+        'after': query_start_date.strftime('%Y/%m/%d'),
+        'before': (end_date + timedelta(days=1)).strftime('%Y/%m/%d')
+    }
+    
+    logger.info(f"Fetching emails from {query_start_date.date()} to {end_date.date()}...")
+    
+    messages = gmail.get_messages(query=construct_query(query_params))
+    
+    logger.info(f"Found {len(messages)} messages.")
+    
+    email_data = []
+    for message in messages:
+        email_data.append({
+            'id': message.id,
+            'thread_id': message.thread_id,
+            'date': message.date,
+            'sender': message.sender,
+            'recipient': message.recipient,
+            'subject': message.subject,
+            'snippet': message.snippet,
+            'body': message.plain,
+            'labels': message.label_ids,
+            'cc': message.cc,
+            'bcc': message.bcc
+        })
+    
+    df = pd.DataFrame(email_data)
+    
+    if df.empty:
         logger.info("No new emails found.")
         return
 
