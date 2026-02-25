@@ -50,7 +50,7 @@ This project is designed to run as a **Cloud Run Job**, using **Secret Manager**
 
 2.  **Enable APIs**:
     ```bash
-    gcloud services enable secretmanager.googleapis.com run.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com
+    gcloud services enable secretmanager.googleapis.com run.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com cloudscheduler.googleapis.com
     ```
 
 3.  **Setup Secrets**:
@@ -82,6 +82,19 @@ This project is designed to run as a **Cloud Run Job**, using **Secret Manager**
       --source . \
       --service-account pwbd-runner@[YOUR_PROJECT_ID].iam.gserviceaccount.com \
       --region asia-southeast1
+    ```
+
+6.  **Create Cloud Scheduler (Daily Trigger)**:
+    Set up the Cloud Scheduler to trigger the loader automatically every day (e.g., at 12:30 AM PHT):
+    ```bash
+    gcloud scheduler jobs create http pwbd-loader-trigger \
+      --location asia-southeast1 \
+      --schedule="30 0 * * *" \
+      --time-zone="Asia/Manila" \
+      --uri="https://asia-southeast1-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/[YOUR_PROJECT_ID]/jobs/pwbd-loader:run" \
+      --http-method=POST \
+      --oauth-service-account-email="pwbd-runner@[YOUR_PROJECT_ID].iam.gserviceaccount.com" \
+      --project [YOUR_PROJECT_ID]
     ```
 
 ## Contributing
